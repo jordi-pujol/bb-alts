@@ -49,7 +49,7 @@ _remove_alternatives :
 	Removes all the alternatives that point to /bin/busybox
 and the alternative named "editor" pointing to /usr/bin/vi-busybox.
 
-_busybox_utilities :
+_bb_alts :
 	Installs alternatives for some busybox utilities,
 detects existing alternatives from other packages
 and avoids conflicts with already installed packages.
