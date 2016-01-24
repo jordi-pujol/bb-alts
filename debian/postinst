@@ -1,0 +1,166 @@
+#!/bin/sh
+
+# install busybox applets as utilities using Debian alternatives.
+
+# Copyright: (C) 2009-2016 Jordi Pujol <jordipujolp@gmail.com>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+set -e
+
+_is_absolute_dir() {
+	local a_path="${1}"
+	[ "$(dirname "${a_path}")" != '.' ] && \
+	[ "$(printf '%c' "${a_path}")" = '/' ] && \
+	[ -d "$(dirname "${a_path}")" ]
+}
+
+# Parameters:
+# $1 first slave path/name
+# $2 name of the first slave alternative, may be blank
+# ...
+# $N*2-1 slave path/name N
+# $N*2 name of the N slave alternative, may be blank
+_install_bb_slave_alts() {
+	local a_path a_path_basename a_name target t
+	while [ -n "${1:-}" ]; do
+		a_path="$(echo "${1}" | cut -f 1 -d ':')"
+		a_path_basename="$(basename "${a_path}")"
+		a_name="$(echo "${1}" | cut -f 2 -s -d ':')"
+		[ -n "${a_name}" ] || a_name="$(basename "${a_path}")"
+		target="$(echo "${1}" | cut -f 3 -s -d ':')"
+		[ -n "${target}" ] || target="${bb}"
+		shift
+		t="$(which "${target}")" && \
+		[ -x "${t}" ] || \
+			( printf 'Error: slave alternative, target %s does not exist.\n' "${target}" >&2
+			continue )
+		target="$(which "${target}")"
+		if [ "${target}" = "${bb}" ]; then
+			if ! echo "${bb_applets}" | grep -qswe "${a_path_basename}$"; then
+				printf 'Error: slave alternative, busybox applet %s does not exist.\n' "${a_path_basename}" >&2
+				continue
+			fi
+			_is_absolute_dir "${a_path}" || \
+				a_path="$(echo "${bb_applets}" | grep -swe "${a_path_basename}\$")"
+		elif ! echo "${bb_targets}" | grep -qsxe "${target}"; then
+			printf "Error: slave alternative %s target %s is not a busybox \
+applet.\n" "${a_path}" "${target}" >&2
+			continue
+		fi
+		if [ ! -e "${a_path}" ] || \
+		( [ -L "${a_path}" ] && \
+		readlink "${a_path}" | grep -qse '^/etc/alternatives/' ); then
+			echo "--slave ${a_path} ${a_name} ${target} \
+--slave $mandir/man1/${a_name}.1.gz ${a_name}.1.gz $mandir/man1/busybox.1.gz"
+			continue
+		fi
+		printf "Warning: not installing slave alternative %s \
+because another package already provides %s.\n" "${a_name}" "${a_path}" >&2
+	done
+	:
+}
+
+# Parameters:
+# $1 path/name : name of the main alternative, path is optional
+# $2 main alternative priority:name:target
+# $3 first slave alternative description
+# ...
+# $(N+2) N slave alternative description
+_install_bb_alt() {
+	local a_path a_path_basename a_priority a_name target t
+	a_path="${1}"
+	a_path_basename="$(basename "${a_path}")"
+	shift
+	a_priority="$(echo "${1}" | cut -f 1 -d ':')"
+	[ -n "${a_priority}" ] || a_priority="${PRIORITY}"
+	a_name="$(echo "${1}" | cut -f 2 -s -d ':')"
+	[ -n "${a_name}" ] || a_name="$(basename "${a_path}")"
+	target="$(echo "${1}" | cut -f 3 -s -d ':')"
+	[ -n "${target}" ] || target="${bb}"
+	shift
+	t="$(which "${target}")" && \
+	[ -x "${t}" ] || \
+		( printf 'Error: target %s does not exist.\n' "${target}" >&2
+		return 0 )
+	target="$(which "${target}")"
+	if [ "${target}" = "${bb}" ]; then
+		if ! echo "${bb_applets}" | grep -qswe "${a_path_basename}$"; then
+			printf 'Error: busybox applet %s does not exist.\n' "${a_path_basename}" >&2
+			return 0
+		fi
+		_is_absolute_dir "${a_path}" || \
+			a_path="$(echo "${bb_applets}" | grep -swe "${a_path_basename}\$")"
+	elif ! echo "${bb_targets}" | grep -qsxe "${target}"; then
+		printf "Error: master alternative %s target %s is not a busybox \
+applet.\n" "${a_path}" "${target}" >&2
+		return 0
+	fi
+	echo "Installing alternative ${a_name} in ${a_path} for ${target}." >&2
+	res="$(update-alternatives --install "${a_path}" "${a_name}" "${target}" "${a_priority}" \
+	$(echo "--slave $mandir/man1/${a_path_basename}.1.gz ${a_path_basename}.1.gz $mandir/man1/busybox.1.gz"
+	_install_bb_slave_alts "${@}") \
+	 2>&1)" || \
+		printf 'Error: %s\n' "${res}" >&2
+	:
+}
+
+# echo the parameters for the function _install_bb_alt
+_slave_alts() {
+	echo "${1}" | cut -f 2- -s -d ',' | tr -s ',' ' '
+	:
+}
+
+# parse configuration variables and install alternatives
+_bb_alts() {
+	local bb_applets priority
+	local link_group alt_master alt_path alt_parms alt
+	local mandir="/usr/share/man"
+	bb_applets="$(busybox --list-full | sed -nre '3,$ {\|^| s||/|;p}')"
+
+	echo "Installing some busybox alternatives." >&2
+
+	for link_group in ${BB_ALTS} \
+	${USE_ALTS_EXTRA:+${BB_ALTS_EXTRA:-}}; do
+		alt_master="$(echo "${link_group}" | cut -f 1 -d ',')"
+		alt_path="$(echo "${alt_master}" | cut -f 1 -d ':')"
+		alt_parms="$(echo "${alt_master}" | cut -f 2- -s -d ':')"
+		if alt="$(which "${alt_path}")"; then
+			if [ -L "${alt}" ] && \
+			readlink "${alt}" | grep -qse '^/etc/alternatives/'; then
+				_install_bb_alt "${alt}" "${alt_parms}" $(_slave_alts "${link_group}")
+				continue
+			fi
+			printf "Warning: not installing master alternative %s \
+because another package already provides %s.\n" "${alt_path}" "${alt}" >&2
+		else
+			_install_bb_alt "${alt_path}" "${alt_parms}" $(_slave_alts "${link_group}")
+		fi
+	done
+	:
+}
+
+bb="$(which "busybox")" || exit 1
+. /etc/bb-alts.conf
+[ -n "${BB_ALTS:-}" ] || exit 1
+bb_targets="${bb}
+$(dpkg -L bb-alts | grep -se '^/usr/bin/')"
+
+case "${1:-}" in
+configure)
+	_bb_alts
+	;;
+esac
+
+#DEBHELPER#

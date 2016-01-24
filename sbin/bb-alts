@@ -1,0 +1,87 @@
+#!/bin/sh
+
+# install busybox applets as alternatives
+# using Debian alternatives
+
+# Copyright: (C) 2009-2016 Jordi Pujol <jordipujolp@gmail.com>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+_bb_alts_deconfigure() {
+	echo "Deconfigure busybox alternatives." >&2
+	/var/lib/dpkg/info/bb-alts.prerm
+	:
+}
+
+_bb_alts_reconfigure() {
+	echo "Reconfiguring busybox alternatives." >&2
+	dpkg-reconfigure bb-alts
+	:
+}
+
+_bb_alts_list() {
+	local a_name target bb_targets alts
+	echo "Listing busybox alternatives." >&2
+	bb_targets="${bb}
+$(dpkg -L bb-alts | grep -se '^/usr/bin/')"
+	while read a_name; do
+		[ -n "${a_name}" ] || continue
+		alts="$(update-alternatives --list "${a_name}" 2> /dev/null)"
+		while read target; do
+			[ -n "${target}" ] || continue
+			! echo "${alts}" | grep -qsxe "${target}" || \
+				update-alternatives --query "${a_name}" 2>&1 | \
+				awk -v target="${target}" 'NR <= 2 {print}
+$1 == "Value:" {print}
+$1 == "Alternative:" && $2 == target {p=1}
+/^$/ && p == 1 {exit}
+p == 1 {print}
+END{print ""}'
+		done << EOF
+${bb_targets}
+EOF
+	done << EOF
+$(update-alternatives --get-selections | awk '{print $1}')
+EOF
+	:
+}
+
+_bb_alts_help() {
+	echo "bb-alts
+installs alternatives for busybox internal applets.
+Options:
+-d --deconfigure : removes all busybox alternatives.
+-r --reconfigure : installs alternatives specified in /etc/bb-alts.conf
+	detecting conflicts with other installed packages.
+-l --list : lists all installed busybox alternatives.
+	This is the default option.
+-h --help : shows this text.
+" >&2
+	:
+}
+
+bb="$(which "busybox")" || exit 1
+
+# execute an option
+case "${1:-"--list"}" in
+-d|--deconfigure)
+	_bb_alts_deconfigure;;
+-r|--reconfigure)
+	_bb_alts_reconfigure;;
+-l|--list)
+	_bb_alts_list;;
+*)
+	_bb_alts_help;;
+esac
+:

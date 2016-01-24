@@ -1,0 +1,20 @@
+Source: bb-alts
+Section: misc
+Priority: optional
+Maintainer: Jordi Pujol Palomer <jordipujolp@gmail.com>
+Build-Depends: debhelper (>= 9),
+Standards-Version: 3.8.0
+Homepage: http://livenet.selfip.com
+
+Package: bb-alts
+Architecture: all
+Depends: ${misc:Depends}, busybox,
+Provides: awk, mt, telnet-client,
+ traceroute, traceroute6, editor, vi, lzma,
+Description: Installs utility programs provided by the internal busybox applets,
+ adding some useful busybox utilities to the system. The recommended 
+ configuration installs only alternatives that are already well 
+ established Debian alternatives. However, the superuser can configure 
+ *bb-alts* to install alternatives for any busybox applet, in 
+ this case the alternatives installed by *bb-alts* may 
+ conflict with other files; please read the documentation.

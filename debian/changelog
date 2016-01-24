@@ -1,0 +1,29 @@
+bb-alts (0.5) unstable; urgency=medium
+
+  * man pager for bb-alts.conf
+
+ -- Jordi Pujol Palomer <jordipujolp@gmail.com>  Sun, 24 Jan 2016 07:16:24 +0100
+
+bb-alts (0.4) unstable; urgency=medium
+
+  * setting values for alternative priorities.
+
+ -- Jordi Pujol Palomer <jordipujolp@gmail.com>  Sat, 23 Jan 2016 04:08:52 +0100
+
+bb-alts (0.3) unstable; urgency=medium
+
+  * config file /etc/bb-alts.conf
+
+ -- Jordi Pujol Palomer <jordipujolp@gmail.com>  Tue, 19 Jan 2016 01:04:52 +0100
+
+bb-alts (0.2) unstable; urgency=low
+
+  * updating and cleaning the code.
+
+ -- Jordi Pujol Palomer <jordipujolp@gmail.com>  Mon, 18 Jan 2016 13:24:35 +0100
+
+bb-alts (0.1) unstable; urgency=low
+
+  * initial version.
+
+ -- Jordi Pujol Palomer <jordipujolp@gmail.com>  Tue, 12 Nov 2013 19:57:17 +0100
