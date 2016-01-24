@@ -63,26 +63,3 @@ other may be executable files installed by other packages.
 
 Some alternatives have needed some additional coding due to the special 
 use of "nawk", "editor" and "pager".
-
-In the near future the packages that conflict with the most useful 
-busybox utilities may be modified to install alternatives. When the 
-functionality of the busybox applets is enough to make the work 
-successfully we should modify *bb-alts* to install the 
-corresponding alternative.
-
-Can not install alternatives over existing executable files; we may 
-create a diversion for the original executable file and install in that 
-location an alternative for a busybox utility but it is difficult and 
-not reliable.
-
-aptitude search '?provides(lzma)'
-Provides: awk
-Provides: mt, from cpio package
-Provides: telnet-client
-Provides: traceroute
-Provides: editor, vi
-Provides: lzma
-
-ftpget and ftpput are bonus utilities, not provided by other packages
-***********************************
-bb-alts.conf
