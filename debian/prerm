@@ -19,22 +19,21 @@
 
 set -e
 
-_remove_alternatives() {
-	local a_name bb_targets target alts
+_remove_alts() {
+	local a_name bb_targets target
 	local res
 	bb_targets="${bb}
 $(dpkg -L bb-alts | grep -se '^/usr/bin/')"
 	echo "Removing all busybox alternatives." >&2
 	while read a_name; do
 		[ -n "${a_name}" ] || continue
-		alts="$(update-alternatives --list "${a_name}" 2> /dev/null)"
 		while read target; do
 			[ -n "${target}" ] || continue
-			! echo "${alts}" | grep -qsxe "${target}" || \
-				res="$(update-alternatives --remove "${a_name}" "${target}" 2>&1)" || \
-					printf 'Error: %s\n' "${res}" >&2
+			res="$(update-alternatives --remove "${a_name}" "${target}" 2>&1)" || \
+				printf 'Error: %s\n' "${res}" >&2
 		done << EOF
-${bb_targets}
+$(update-alternatives --list "${a_name}" 2> /dev/null | \
+grep -sxE "$(printf '%s' "${bb_targets}" | tr -s '\n' '|')")
 EOF
 	done << EOF
 $(update-alternatives --get-selections | awk '{print $1}')
@@ -44,6 +43,6 @@ EOF
 
 bb="$(which "busybox")" || exit 1
 
-_remove_alternatives
+_remove_alts
 
 #DEBHELPER#

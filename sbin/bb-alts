@@ -37,19 +37,18 @@ _bb_alts_list() {
 $(dpkg -L bb-alts | grep -se '^/usr/bin/')"
 	while read a_name; do
 		[ -n "${a_name}" ] || continue
-		alts="$(update-alternatives --list "${a_name}" 2> /dev/null)"
 		while read target; do
 			[ -n "${target}" ] || continue
-			! echo "${alts}" | grep -qsxe "${target}" || \
-				update-alternatives --query "${a_name}" 2>&1 | \
-				awk -v target="${target}" 'NR <= 2 {print}
+			update-alternatives --query "${a_name}" 2>&1 | \
+			awk -v target="${target}" 'NR <= 2 {print}
 $1 == "Value:" {print}
 $1 == "Alternative:" && $2 == target {p=1}
 /^$/ && p == 1 {exit}
 p == 1 {print}
 END{print ""}'
 		done << EOF
-${bb_targets}
+$(update-alternatives --list "${a_name}" 2> /dev/null | \
+grep -sxE "$(printf '%s' "${bb_targets}" | tr -s '\n' '|')")
 EOF
 	done << EOF
 $(update-alternatives --get-selections | awk '{print $1}')
