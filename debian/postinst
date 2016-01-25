@@ -54,7 +54,7 @@ _install_bb_slave_alts() {
 			fi
 			_is_absolute_dir "${a_path}" || \
 				a_path="$(echo "${bb_applets}" | grep -swe "${a_path_basename}\$")"
-		elif ! echo "${bb_targets}" | grep -qsxe "${target}"; then
+		elif ! echo "${target}" | grep -qsxE "${bb_targets}"; then
 			printf "Error: slave alternative %s target %s is not a busybox \
 applet.\n" "${a_path}" "${target}" >&2
 			continue
@@ -102,7 +102,7 @@ _install_bb_alt() {
 		fi
 		_is_absolute_dir "${a_path}" || \
 			a_path="$(echo "${bb_applets}" | grep -swe "${a_path_basename}\$")"
-	elif ! echo "${bb_targets}" | grep -qsxe "${target}"; then
+	elif ! echo "${target}" | grep -qsxE "${bb_targets}"; then
 		printf "Error: master alternative %s target %s is not a busybox \
 applet.\n" "${a_path}" "${target}" >&2
 		return 0
@@ -154,8 +154,9 @@ because another package already provides %s.\n" "${alt_path}" "${alt}" >&2
 bb="$(which "busybox")" || exit 1
 . /etc/bb-alts.conf
 [ -n "${BB_ALTS:-}" ] || exit 1
-bb_targets="${bb}
-$(dpkg -L bb-alts | grep -se '^/usr/bin/')"
+bb_targets="$(printf '%s' "${bb}
+$(dpkg -L bb-alts | grep -se '^/usr/bin/.*-busybox')" | \
+tr -s '\n' '|')"
 
 case "${1:-}" in
 configure)

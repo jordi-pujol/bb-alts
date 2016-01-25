@@ -22,8 +22,9 @@ set -e
 _remove_alts() {
 	local a_name bb_targets target
 	local res
-	bb_targets="${bb}
-$(dpkg -L bb-alts | grep -se '^/usr/bin/')"
+	bb_targets="$(printf '%s' "${bb}
+$(dpkg -L bb-alts | grep -se '^/usr/bin/.*-busybox')" | \
+tr -s '\n' '|')"
 	echo "Removing all busybox alternatives." >&2
 	while read a_name; do
 		[ -n "${a_name}" ] || continue
@@ -33,7 +34,7 @@ $(dpkg -L bb-alts | grep -se '^/usr/bin/')"
 				printf 'Error: %s\n' "${res}" >&2
 		done << EOF
 $(update-alternatives --list "${a_name}" 2> /dev/null | \
-grep -sxE "$(printf '%s' "${bb_targets}" | tr -s '\n' '|')")
+grep -sxE "${bb_targets}")
 EOF
 	done << EOF
 $(update-alternatives --get-selections | awk '{print $1}')

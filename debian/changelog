@@ -1,3 +1,10 @@
+bb-alts (0.5.x1) experimental; urgency=medium
+
+  * postinst, prerm, sbin/bb-alts:
+    transform variable bb_targets in a grep expression
+
+ -- Jordi Pujol Palomer <jordipujolp@gmail.com>  Mon, 25 Jan 2016 09:05:08 +0100
+
 bb-alts (0.5) unstable; urgency=medium
 
   * man pager for bb-alts.conf
