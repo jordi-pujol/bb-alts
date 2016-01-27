@@ -19,31 +19,45 @@
 
 set -e
 
-_remove_alts() {
+_bb_targets() {
+	printf '%s' "${bb}
+$(dpkg -L bb-alts | grep -se '^/usr/bin/.*-busybox')" | \
+tr -s '\n' '|'
+}
+
+_list() {
+	local remove="${1}"
 	local a_name bb_targets target
 	local res
-	bb_targets="$(printf '%s' "${bb}
-$(dpkg -L bb-alts | grep -se '^/usr/bin/.*-busybox')" | \
-tr -s '\n' '|')"
-	echo "Removing all busybox alternatives." >&2
-	while read a_name; do
-		[ -n "${a_name}" ] || continue
-		while read target; do
-			[ -n "${target}" ] || continue
-			res="$(update-alternatives --remove "${a_name}" "${target}" 2>&1)" || \
-				printf 'Error: %s\n' "${res}" >&2
-		done << EOF
-$(update-alternatives --list "${a_name}" 2> /dev/null | \
-grep -sxE "${bb_targets}")
-EOF
-	done << EOF
-$(update-alternatives --get-selections | awk '{print $1}')
-EOF
+	bb_targets="$(_bb_targets)"
+	[ -n "${remove}" ] || : > /var/tmp/bb-alts-reconfigure.txt
+	for a_name in $(update-alternatives --get-selections | awk '{print $1}'); do
+		for target in $(update-alternatives --list "${a_name}" 2> /dev/null | \
+		grep -sxE "${bb_targets}"); do
+			if [ -n "${remove}" ]; then
+				echo "Removing alternative ${a_name} for ${target}" >&2
+				res="$(update-alternatives --remove "${a_name}" "${target}" 2>&1)" || \
+					printf 'Error: %s\n' "${res}" >&2
+			else
+				echo "Saving alternative ${a_name} for ${target}" >&2
+				echo "${a_name}	${target}" >> /var/tmp/bb-alts-reconfigure.txt
+			fi
+		done
+	done
 	:
 }
 
 bb="$(which "busybox")" || exit 1
 
-_remove_alts
+case "${1:-}" in
+remove|deconfigure)
+	echo "Removing all busybox alternatives." >&2
+	_list "1" ;;
+upgrade)
+	echo "Saving list of busybox alternatives." >&2
+	_list "" ;;
+failed-upgrade)
+	rm -f /var/tmp/bb-alts-reconfigure.txt ;;
+esac
 
 #DEBHELPER#

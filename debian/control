@@ -12,9 +12,8 @@ Depends: ${misc:Depends}, busybox,
 Provides: awk, mt, telnet-client,
  traceroute, traceroute6, editor, vi, lzma,
 Description: Installs utility programs provided by the internal busybox applets,
- adding some useful busybox utilities to the system. The recommended 
+ allowing easy use of busybox applets in the system. The recommended 
  configuration installs only alternatives that are already well 
  established Debian alternatives. However, the superuser can configure 
- *bb-alts* to install alternatives for any busybox applet, in 
- this case the alternatives installed by *bb-alts* may 
- conflict with other files; please read the documentation.
+ *bb-alts* to install alternatives for any busybox applet; please read 
+ the documentation.

@@ -4,7 +4,7 @@ Debian package that installs alternatives to busybox applets
 Description
 
 *bb-alts* is a package that installs alternatives to busybox 
-internal applets, adding some useful utilities to the system.
+internal applets, allowing easy use of busybox applets in the system.
 
 Detects existing Debian alternatives from other packages and installs 
 the corresponding busybox applet as another alternative, installing 
@@ -12,10 +12,10 @@ also man pages for each one; man pages are linked to the *busybox*
 man page.
 
 Before installing alternatives, *bb-alts* removes all alternatives that 
-point to busybox and the helper programs installed by bb-alts.
+point to busybox and the other helper programs installed by bb-alts.
 
-The file /etc/bb-alts.conf lists the busybox applet names that 
-*bb-alts* will consider as candidates for installing an alternative.
+The file /etc/bb-alts.conf configures the candidate alternatives that 
+*bb-alts* will consider for installing an alternative.
 
 It's recommended to install only alternatives that are also installed 
 as alternatives by the other packages. However *bb-alts* can install 
@@ -33,26 +33,12 @@ file in the corresponding location.
 
 Before installing a new package that provides an executable file on the 
 same location that a busybox alternative, the superuser must remove the 
-alternatives installed by *bb-alts*, let's execute: 
-*bb-alts* --deconfigure ; therefore install the new package and 
-reconfigure *bb-alts*.
+conflicting alternatives.
 
 On the other side, after removing a package that provides some utility 
 that is also in busybox we must reconfigure *bb-alts*, that will 
 install the corresponding alternatives activating the utility from the 
 *busybox* internal applet.
-
-*****************************************************
-main procedures:
-
-_remove_alternatives :
-	Removes all the alternatives that point to /bin/busybox
-and the alternative named "editor" pointing to /usr/bin/vi-busybox.
-
-_bb_alts :
-	Installs alternatives for some busybox utilities,
-detects existing alternatives from other packages
-and avoids conflicts with already installed packages.
 
 *****************************************************
 Comments:

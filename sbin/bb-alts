@@ -18,28 +18,31 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-_bb_alts_deconfigure() {
-	echo "Deconfigure busybox alternatives." >&2
-	/var/lib/dpkg/info/bb-alts.prerm
+_bb_targets() {
+	printf '%s' "${bb}
+$(dpkg -L bb-alts | grep -se '^/usr/bin/.*-busybox')" | \
+tr -s '\n' '|'
+}
+
+_deconfigure() {
+	echo "Deconfiguring busybox alternatives." >&2
+	/var/lib/dpkg/info/bb-alts.prerm deconfigure
 	:
 }
 
-_bb_alts_reconfigure() {
+_reconfigure() {
 	echo "Reconfiguring busybox alternatives." >&2
 	dpkg-reconfigure bb-alts
 	:
 }
 
-_bb_alts_list() {
+_list() {
 	local a_name target bb_targets alts
 	echo "Listing busybox alternatives." >&2
-	bb_targets="$(printf '%s' "${bb}
-$(dpkg -L bb-alts | grep -se '^/usr/bin/.*-busybox')" | \
-tr -s '\n' '|')"
-	while read a_name; do
-		[ -n "${a_name}" ] || continue
-		while read target; do
-			[ -n "${target}" ] || continue
+	bb_targets="$(_bb_targets)"
+	for a_name in $(update-alternatives --get-selections | awk '{print $1}'); do
+		for target in $(update-alternatives --list "${a_name}" 2> /dev/null | \
+		grep -sxE "${bb_targets}"); do
 			update-alternatives --query "${a_name}" 2>&1 | \
 			awk -v target="${target}" 'NR <= 2 {print}
 $1 == "Value:" {print}
@@ -47,17 +50,19 @@ $1 == "Alternative:" && $2 == target {p=1}
 /^$/ && p == 1 {exit}
 p == 1 {print}
 END{print ""}'
-		done << EOF
-$(update-alternatives --list "${a_name}" 2> /dev/null | \
-grep -sxE "${bb_targets}")
-EOF
-	done << EOF
-$(update-alternatives --get-selections | awk '{print $1}')
-EOF
+		done
+	done
 	:
 }
 
-_bb_alts_help() {
+_list_active() {
+	echo "Listing actually selected busybox alternatives." >&2
+	update-alternatives --get-selections | \
+	awk -v bb_targets="$(_bb_targets)" '$3 ~ bb_targets'
+	:
+}
+
+_help() {
 	echo "bb-alts
 installs alternatives for busybox internal applets.
 Options:
@@ -66,6 +71,7 @@ Options:
 	detecting conflicts with other installed packages.
 -l --list : lists all installed busybox alternatives.
 	This is the default option.
+-a --list-active : lists busybox alternatives that are actually selected.
 -h --help : shows this text.
 " >&2
 	:
@@ -73,15 +79,27 @@ Options:
 
 bb="$(which "busybox")" || exit 1
 
-# execute an option
-case "${1:-"--list"}" in
--d|--deconfigure)
-	_bb_alts_deconfigure;;
--r|--reconfigure)
-	_bb_alts_reconfigure;;
--l|--list)
-	_bb_alts_list;;
-*)
-	_bb_alts_help;;
-esac
+test -n "${1:-}" || set -- "--list"
+
+while [ -n "${1:-}" ]; do
+	# execute an option
+	case "${1}" in
+	-d|--deconfigure)
+		_deconfigure;;
+	-r|--reconfigure)
+		_reconfigure;;
+	-a|--list-active)
+		_list_active;;
+	-l|--list)
+		_list;;
+	-h|--help)
+		_help;;
+	*)
+		echo "Invalid option: ${1}" >&2
+		_help
+		exit 1
+		;;
+	esac
+	shift
+done
 :

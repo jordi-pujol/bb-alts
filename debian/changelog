@@ -1,13 +1,24 @@
-bb-alts (0.5.x1) experimental; urgency=medium
+bb-alts (0.6) unstable; urgency=medium
 
+  * big code cleaning, has less lines, runs faster and lists more user
+    friendly messages.
+  * change the format of the master alternative,
+    priority is now the last field.
+  * when upgrading or reconfiguring will not remove all bb alternatives,
+    only the old alternatives that are not reconfigured.
   * postinst, prerm, sbin/bb-alts:
     transform variable bb_targets in a grep expression
+  * less-busybox:
+    specify options: -M -I -~
+  * makeup for the man pages.
+  * bb-alts program:
+    new option -a|--list-active; lists the actually selected alternatives.
 
- -- Jordi Pujol Palomer <jordipujolp@gmail.com>  Mon, 25 Jan 2016 09:05:08 +0100
+ -- Jordi Pujol Palomer <jordipujolp@gmail.com>  Tue, 26 Jan 2016 19:01:23 +0100
 
 bb-alts (0.5) unstable; urgency=medium
 
-  * man pager for bb-alts.conf
+  * man page for bb-alts.conf
 
  -- Jordi Pujol Palomer <jordipujolp@gmail.com>  Sun, 24 Jan 2016 07:16:24 +0100
 
