@@ -7,7 +7,7 @@ The original source can always be found at:
 bb-alts is a Debian package that installs alternatives for busybox 
 internal applets
 
-This method from Apt, and the modifications made to it are
+This method and the modifications made to it are
 licensed under the terms of the GNU General Public License (GPL),
 version 3 or later, as published by the Free Software Foundation:
 
