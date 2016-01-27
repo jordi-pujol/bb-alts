@@ -11,9 +11,6 @@ the corresponding busybox applet as another alternative, installing
 also man pages for each one; man pages are linked to the *busybox* 
 man page.
 
-Before installing alternatives, *bb-alts* removes all alternatives that 
-point to busybox and the other helper programs installed by bb-alts.
-
 The file /etc/bb-alts.conf configures the candidate alternatives that 
 *bb-alts* will consider for installing an alternative.
 
