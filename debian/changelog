@@ -1,3 +1,10 @@
+bb-alts (0.7) UNRELEASED; urgency=medium
+
+  * function _bb_targets().
+    tr [:space:] convert all horizontal or vertical whitespace
+
+ -- Jordi Pujol Palomer <jordipujolp@gmail.com>  Fri, 29 Jan 2016 21:14:27 +0100
+
 bb-alts (0.6) unstable; urgency=medium
 
   * big code cleaning, has less lines, runs faster and lists more user

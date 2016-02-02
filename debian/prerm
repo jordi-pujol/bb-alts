@@ -20,9 +20,8 @@
 set -e
 
 _bb_targets() {
-	printf '%s' "${bb}
-$(dpkg -L bb-alts | grep -se '^/usr/bin/.*-busybox')" | \
-tr -s '\n' '|'
+	printf '%s' "${bb} $(dpkg -L bb-alts | grep -se '^/usr/bin/.*-busybox')" | \
+		tr -s '[:space:]' '|'
 }
 
 _list() {

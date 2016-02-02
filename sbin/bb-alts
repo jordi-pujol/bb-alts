@@ -19,9 +19,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 _bb_targets() {
-	printf '%s' "${bb}
-$(dpkg -L bb-alts | grep -se '^/usr/bin/.*-busybox')" | \
-tr -s '\n' '|'
+	printf '%s' "${bb} $(dpkg -L bb-alts | grep -se '^/usr/bin/.*-busybox')" | \
+		tr -s '[:space:]' '|'
 }
 
 _deconfigure() {
