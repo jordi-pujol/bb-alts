@@ -4,18 +4,18 @@ bb-alts(5)
 Name
 ----
 
-bb-alts - installs alternatives for busybox internal utilities
+bb-alts - installs Debian alternatives for busybox internal applets
 
 Synopsis
 --------
 
 *bb-alts*
 
-is a package that installs utility programs provided by the internal 
-busybox applets, allowing easy use of busybox applets in the system.
+is a package that installs utility programs provided by the busybox 
+internal applets, allowing easy use of busybox commands in the system.
 
-The *bb-alts* program is a front-end to the configuration made by the 
-*bb-alts* package.
+The *bb-alts* program is a front-end to manage the configuration made 
+by the *bb-alts* package.
 
 Usage
 -----
@@ -36,8 +36,8 @@ lists the busybox alternatives that are actually selected.
 removes all busybox alternatives.
 
   *-r|--reconfigure*::
-installs busybox alternatives detecting incompatibility with already 
-installed packages.
+installs busybox alternatives detecting incompatibility with other 
+already installed packages.
 
   *-h|--help*::
 shows a help text.
@@ -45,19 +45,18 @@ shows a help text.
 Description
 -----------
 *bb-alts* is a package that installs alternatives to busybox internal 
-utilities, allowing easy use of busybox applets in the system.
+applets, allowing easy use of busybox commands in the system.
 
 Detects existing Debian alternatives from other packages and installs 
 the corresponding busybox utility as another alternative, installing 
-also man pages for each utility; man pages are linked to the *busybox* 
-man page.
-
-Before installing alternatives, *bb-alts* removes all alternatives that 
-point to */bin/busybox* and the other helper programs installed by the 
-*bb-alts* package.
+also man pages for each utility; all man pages are linked to the 
+*busybox* man page.
 
 The file */etc/bb-alts.conf* configures the candidate alternatives that 
 *bb-alts* will consider for installing an alternative.
+
+When reconfiguring or upgrading the package *bb-alts* will save the 
+previous status of the alternatives.
 
 It's recommended to install only alternatives that are also installed 
 as alternatives by the other packages. However *bb-alts* can install 
@@ -69,6 +68,11 @@ that are also provided by busybox, in this case the alternatives
 installed by *bb-alts* may conflict with other files; therefore some 
 problems may arise and the superuser must be aware of that.
 
+When installing alternatives, *bb-alts* will remove all alternatives 
+that are not listed in the configuration file and point to 
+*/bin/busybox* or the other helper programs installed by the *bb-alts* 
+package.
+
 *bb-alts* will not install an utility when there is already another 
 file in the corresponding location.
 
@@ -77,9 +81,9 @@ same location that a busybox alternative, the superuser must remove the
 conflicting alternatives.
 
 On the other side, after removing a package that provides some utility 
-that is also in busybox we must reconfigure *bb-alts*, that will 
-install the corresponding alternatives activating the utility from the 
-*busybox* internal applet.
+that is also listed in */etc/bb-alts.conf* we must reconfigure 
+*bb-alts*, that will install the corresponding alternatives activating 
+the command from the *busybox* internal applet.
 
 See also
 --------

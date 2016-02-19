@@ -1,6 +1,7 @@
 #!/bin/sh
 
-# install busybox applets as utilities using Debian alternatives.
+# bb-alts:
+# installs Debian alternatives for busybox internal applets
 
 # Copyright: (C) 2009-2016 Jordi Pujol <jordipujolp@gmail.com>
 #
@@ -41,20 +42,20 @@ _is_installable() {
 	[ -n "${target}" ] || target="${bb}"
 	t="$(which "${target}")" && \
 	[ -x "${t}" ] || \
-		( printf 'Error: alternative %s target %s does not exist.\n' \
+		( printf 'Error: alternative %s, target %s does not exist.\n' \
 		"${a_path}" "${target}" >&2
 		return 1 )
 	target="$(which "${target}")"
 	if [ "${target}" = "${bb}" ]; then
-		if ! echo "${bb_applets}" | grep -qswe "${a_path_basename}$"; then
-			printf 'Error: alternative %s busybox applet %s does not exist.\n' \
+		if ! echo "${bb_applet_names}" | grep -qswe "${a_path_basename}"; then
+			printf 'Error: alternative %s, busybox applet %s does not exist.\n' \
 			"${a_path}" "${a_path_basename}" >&2
 			return 1
 		fi
 		_is_absolute_path "${a_path}" || \
 			a_path="$(echo "${bb_applets}" | grep -swe "${a_path_basename}\$")"
 	elif ! echo "${target}" | grep -qsxE "${bb_targets}"; then
-		printf "Error: alternative %s target %s is not a busybox applet.\n" \
+		printf "Error: alternative %s, target %s is not a busybox applet.\n" \
 		"${a_path}" "${target}" >&2
 		return 1
 	fi
@@ -80,12 +81,13 @@ _install_slaves() {
 
 # parse configuration variables and install alternatives
 _alts() {
-	local reconfigure="$(test ! -e /var/tmp/bb-alts-reconfigure.txt || echo "1")"
-	local bb_applets priority
 	local link_group alt res
 	local a_path a_path_basename a_priority a_name target
+	local reconfigure="$(test ! -e /var/tmp/bb-alts-reconfigure.txt || echo "1")"
+	local bb_applets="$(busybox --list-full | sed -nre '3,$ {\|^| s||/|;p}')"
+	local bb_applet_names="$(busybox --list | sed -re '1,2d;$!{:a;N;s/\n/\t/;ta}')"
+	local bb_targets="$(_bb_targets)"
 	local mandir="/usr/share/man"
-	bb_applets="$(busybox --list-full | sed -nre '3,$ {\|^| s||/|;p}')"
 
 	echo "Installing some busybox alternatives." >&2
 
@@ -117,7 +119,6 @@ _alts() {
 bb="$(which "busybox")" || exit 1
 . /etc/bb-alts.conf
 [ -n "${BB_ALTS:-}" ] || exit 1
-bb_targets="$(_bb_targets)"
 
 case "${1:-}" in
 configure)

@@ -1,7 +1,7 @@
 #!/bin/sh
 
-# install busybox applets as alternatives
-# using Debian alternatives
+# bb-alts:
+# installs Debian alternatives for busybox internal applets
 
 # Copyright: (C) 2009-2016 Jordi Pujol <jordipujolp@gmail.com>
 #

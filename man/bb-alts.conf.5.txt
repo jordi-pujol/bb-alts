@@ -21,23 +21,23 @@ Specify various options to *bb-alts*, as described below.
 
   *BB_ALTS*::
 is a list of candidate alternatives that the package *bb-alts* will 
-consider for installing an alternative. Contains the definitions for 
-some Debian's well known alternatives. It's recommended to install only 
-alternatives that are also installed as alternatives by the other 
-packages.
+consider for installing an alternative. It's recommended to install 
+only alternatives that are also installed as alternatives by the other 
+packages, therefore this variable contains the definitions for some 
+Debian's well known alternatives.
 
 
   *BB_ALTS_EXTRA*::
-is another list of candidate alternatives for *bb-alts* to install an 
-alternative. This list contains extra alternatives to useful *busybox* 
-applets that may conflict with programs installed by other packages.
+is another list of candidate alternatives for *bb-alts* to install. 
+This list contains extra alternatives to useful *busybox* applets that 
+may conflict with executable files installed by other packages.
 
   *USE_ALTS_EXTRA*::
 Installing alternatives that may conflict with other packages is not 
 recommended , but *bb-alts* will consider other installation candidates 
 when the superuser configures some extra applet names in the variable 
-*BB_ALTS_EXTRA* and the variable *USE_ALTS_EXTRA* is set to any 
-non-blank value, after should reconfigure the package.
+*BB_ALTS_EXTRA* and sets the variable *USE_ALTS_EXTRA* to any non-blank 
+value, after should reconfigure the package.
 
   *PRIORITY*::
 this configuration variable specifies default priority for all 
@@ -50,7 +50,7 @@ In the lists of candidate alternatives there are *alternative link
 groups* separated by space or newline.
 
 An alternative's link group will install a master alternative and 
-slaves, the members of a group are separated by comma.
+slaves, the members of a link group are separated by comma.
 
 Generic format for the description of a link group of alternatives:
 
@@ -75,7 +75,7 @@ default value is the basename of /path/name
 
   target::
 is optional, default value is busybox. Must be any of busybox or the 
-other helper programs  installed by the package.
+other helper programs installed by the package.
 
   priority::
 is the master alternative priority, optional

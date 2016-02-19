@@ -1,2 +1,4 @@
 #!/bin/sh
+# bb-alts:
+# installs Debian alternatives for busybox internal applets
 busybox awk "${@}"
