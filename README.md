@@ -43,9 +43,11 @@ Debian repository:
 Have stored the corresponding packages in:
 
 deb [arch=amd64,i386] http://livenet.ddns.net/ftp/debian/ sid main contrib non-free
+
 deb-src http://livenet.ddns.net/ftp/debian/ sid main contrib non-free
 
 deb [arch=amd64,i386] http://livenet.ddns.net/ftp/debian/ experimental main contrib non-free
+
 deb-src http://livenet.ddns.net/ftp/debian/ experimental main contrib non-free
 
 *****************************************************
