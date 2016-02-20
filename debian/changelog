@@ -1,4 +1,4 @@
-bb-alts (0.7) UNRELEASED; urgency=medium
+bb-alts (0.7) unstable; urgency=medium
 
   * function _bb_targets().
     tr [:space:] convert all horizontal or vertical whitespace
