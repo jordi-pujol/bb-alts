@@ -57,5 +57,5 @@ Some of the Busybox utilities are already known Debian alternatives,
 "awk,mawk pager lzma,lzcat,unlzma mt telnet traceroute traceroute6 vi editor"
 other may be executable files installed by other packages.
 
-Some alternatives have needed some additional coding due to the special 
-use of "nawk", "editor" and "pager".
+Some alternatives have needed additional coding due to the special use of
+"nawk", "editor" and "pager".
