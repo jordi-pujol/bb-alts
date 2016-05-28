@@ -1,3 +1,10 @@
+bb-alts (0.8) unstable; urgency=medium
+
+  * function _check():
+    invalid alternatives will be automatically reconfigured
+
+ -- Jordi Pujol Palomer <jordipujolp@gmail.com>  Wed, 18 May 2016 10:27:55 +0200
+
 bb-alts (0.7) unstable; urgency=medium
 
   * function _bb_targets().
@@ -7,7 +14,7 @@ bb-alts (0.7) unstable; urgency=medium
 
 bb-alts (0.6) unstable; urgency=medium
 
-  * big code cleaning, has less lines, runs faster and lists more user
+  * big code cleaning, has less lines, runs faster and writes more user
     friendly messages.
   * change the format of the master alternative,
     priority is now the last field.

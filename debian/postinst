@@ -32,6 +32,13 @@ _bb_targets() {
 		tr -s '[:space:]' '|'
 }
 
+_check() {
+	local a_name="${1}"
+	test -L "/etc/alternatives/${a_name}" || return 0
+	ls -L "/etc/alternatives/${a_name}" > /dev/null 2>&1 || \
+		update-alternatives --auto "${a_name}"
+}
+
 _is_installable() {
 	local t
 	a_path="$(echo "${alt}" | cut -f 1 -d ':')"
@@ -99,19 +106,23 @@ _alts() {
 		echo "Installing alternative ${a_name} in ${a_path} for ${target}" >&2
 		[ -z "${reconfigure}" ] || \
 			sed -i -re "\|^${a_name}[[:blank:]]+| d" /var/tmp/bb-alts-reconfigure.txt
-		res="$(update-alternatives --install "${a_path}" "${a_name}" \
+		if res="$(update-alternatives --install "${a_path}" "${a_name}" \
 		"${target}" "${a_priority:-${PRIORITY}}" \
 		$(echo "--slave ${mandir}/man1/${a_path_basename}.1.gz ${a_path_basename}.1.gz ${mandir}/man1/busybox.1.gz"
 		_install_slaves $(echo "${link_group}" | \
 		cut -f 2- -s -d ',' | tr -s ',' ' ')) \
-		 2>&1)" || \
+		 2>&1)"; then
+			_check "${a_name}"
+		 else
 			printf 'Error: %s\n' "${res}" >&2
+		fi
 	done
 	[ -z "${reconfigure}" ] || \
 		while read a_name target; do
 			echo "Removing alternative ${a_name} for ${target}" >&2
 			res="$(update-alternatives --remove "${a_name}" "${target}" 2>&1)" || \
 				printf 'Error: %s\n' "${res}" >&2
+			_check "${a_name}"
 		done < /var/tmp/bb-alts-reconfigure.txt
 	:
 }

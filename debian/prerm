@@ -25,6 +25,13 @@ _bb_targets() {
 		tr -s '[:space:]' '|'
 }
 
+_check() {
+	local a_name="${1}"
+	test -L "/etc/alternatives/${a_name}" || return 0
+	ls -L "/etc/alternatives/${a_name}" > /dev/null 2>&1 || \
+		update-alternatives --auto "${a_name}"
+}
+
 _list() {
 	local remove="${1}"
 	local a_name target res
@@ -35,8 +42,11 @@ _list() {
 		grep -sxE "${bb_targets}"); do
 			if [ -n "${remove}" ]; then
 				echo "Removing alternative ${a_name} for ${target}" >&2
-				res="$(update-alternatives --remove "${a_name}" "${target}" 2>&1)" || \
+				if res="$(update-alternatives --remove "${a_name}" "${target}" 2>&1)"; then
+					_check "${a_name}"
+				else
 					printf 'Error: %s\n' "${res}" >&2
+				fi
 			else
 				echo "Saving alternative ${a_name} for ${target}" >&2
 				echo "${a_name}	${target}" >> /var/tmp/bb-alts-reconfigure.txt
