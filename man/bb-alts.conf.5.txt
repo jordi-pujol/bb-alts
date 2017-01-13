@@ -26,18 +26,30 @@ only alternatives that are also installed as alternatives by the other
 packages, therefore this variable contains the definitions for some 
 Debian's well known alternatives.
 
-
-  *BB_ALTS_EXTRA*::
-is another list of candidate alternatives for *bb-alts* to install. 
-This list contains extra alternatives to useful *busybox* applets that 
-may conflict with executable files installed by other packages.
-
   *USE_ALTS_EXTRA*::
 Installing alternatives that may conflict with other packages is not 
 recommended , but *bb-alts* will consider other installation candidates 
 when the superuser configures some extra applet names in the variable 
 *BB_ALTS_EXTRA* and sets the variable *USE_ALTS_EXTRA* to any non-blank 
 value, after should reconfigure the package.
+
+  *BB_ALTS_EXTRA*::
+it's another list of candidate alternatives for *bb-alts* to install. 
+This list contains extra alternatives to useful *busybox* applets that 
+may conflict with executable files installed by other packages.
+
+  *USE_ALTS_FOREIGN*::
+It's possible to install alternatives to executables that are not 
+*busybox* applets; *bb-alts* will do that when setting the variable 
+*USE_ALTS_FOREIGN* to any non-blank value, and after reconfiguring the 
+package.
+
+  *BB_ALTS_FOREIGN*::
+also it's another list of candidate alternatives for *bb-alts* to 
+install. This list contains foreign alternatives to other executable 
+programs that are not *busybox* applets. The alternatives configured in 
+these way may not be correctly removed when updating or removing the 
+*bb-alts* package, so the superuser must be aware of that.
 
   *PRIORITY*::
 this configuration variable specifies default priority for all 
@@ -58,7 +70,7 @@ Generic format for the description of a link group of alternatives:
 
 Format of the master alternative:
 
-  [/path/]name[:name][:target][:priority]
+  [/path/]name[:name][:target][:priority][:manpage]
 
 Format of the slave alternatives:
 
@@ -74,11 +86,20 @@ of the alternative, is optional,
 default value is the basename of /path/name
 
   target::
-is optional, default value is busybox. Must be any of busybox or the 
-other helper programs installed by the package.
+is optional, default value is busybox. Is allowed any of the busybox 
+applets or the other helper programs installed by the *bb-alts* 
+package, also even other executable programs in the system.
 
   priority::
 is the master alternative priority, optional
+
+  manpage::
+Optional parameter. It's the command name for the man page to use for 
+this alternative. When there is no value then  *bb-alts* will use the 
+busybox's one. When the manpage value is "?", *bb-alts* will search for 
+a matching man page for that command. If the value is invalid, i.e. 
+"-", then  *bb-alts* will not append an slave alternative for the 
+man page.
 
 See also
 --------

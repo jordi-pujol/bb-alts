@@ -3,7 +3,7 @@
 # bb-alts:
 # installs Debian alternatives for busybox internal applets
 
-# Copyright: (C) 2009-2016 Jordi Pujol <jordipujolp@gmail.com>
+# Copyright: (C) 2009-2017 Jordi Pujol <jordipujolp@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,9 +20,23 @@
 
 set -e
 
+_comma_separated() {
+	sed -re ':a
+		N
+		$!ba
+		s/([^[:space:]])[[:space:]]+([^[:space:]])/\1'"${1:-","}"'\2/g
+		s/[[:space:]]+//g'
+}
+
 _bb_targets() {
-	printf '%s' "${bb} $(dpkg -L bb-alts | grep -se '^/usr/bin/.*-busybox')" | \
-		tr -s '[:space:]' '|'
+	local link_group alt
+	( echo "${bb}"
+	dpkg -L bb-alts | grep -se '^/usr/bin/.*-busybox'
+	for link_group in ${USE_ALTS_FOREIGN:+${BB_ALTS_FOREIGN:-}}; do
+		alt="$(echo "${link_group}" | cut -f 1 -d ',')"
+		echo "${alt}" | cut -f 3 -s -d ':'
+	done ) | \
+	_comma_separated '|'
 }
 
 _check() {
@@ -53,10 +67,10 @@ _list() {
 			fi
 		done
 	done
-	:
 }
 
 bb="$(which "busybox")" || exit 1
+. /etc/bb-alts.conf
 
 case "${1:-}" in
 remove|deconfigure)

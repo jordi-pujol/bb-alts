@@ -1,3 +1,13 @@
+bb-alts (0.9) UNRELEASED; urgency=medium
+
+  * allowing to install any alternative,
+    even when the target is not a Busybox applet.
+  * Command name for the manpage to install as an slave alternative;
+    bb-alts also looks for a matching manpage for this command
+    and installs it, if any exists in the system.
+
+ -- Jordi Pujol Palomer <jordipujolp@gmail.com>  Fri, 06 Jan 2017 10:22:34 +0100
+
 bb-alts (0.8) unstable; urgency=medium
 
   * function _check():

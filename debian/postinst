@@ -3,7 +3,7 @@
 # bb-alts:
 # installs Debian alternatives for busybox internal applets
 
-# Copyright: (C) 2009-2016 Jordi Pujol <jordipujolp@gmail.com>
+# Copyright: (C) 2009-2017 Jordi Pujol <jordipujolp@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -27,9 +27,18 @@ _is_absolute_path() {
 	[ -d "$(dirname "${a_path}")" ]
 }
 
+_comma_separated() {
+	sed -re ':a
+		N
+		$!ba
+		s/([^[:space:]])[[:space:]]+([^[:space:]])/\1'"${1:-","}"'\2/g
+		s/[[:space:]]+//g'
+}
+
 _bb_targets() {
-	printf '%s' "${bb} $(dpkg -L bb-alts | grep -se '^/usr/bin/.*-busybox')" | \
-		tr -s '[:space:]' '|'
+	( echo "${bb}"
+	dpkg -L bb-alts | grep -se '^/usr/bin/.*-busybox' ) | \
+	_comma_separated '|'
 }
 
 _check() {
@@ -39,8 +48,17 @@ _check() {
 		update-alternatives --auto "${a_name}"
 }
 
-_is_installable() {
+# searching for a matching man page
+_search_applet_manpage() {
 	local t
+	for t in "${@}"; do
+		! man --where "${t}" || break
+	done 2> /dev/null
+	:
+}
+
+_is_installable() {
+	local t m
 	a_path="$(echo "${alt}" | cut -f 1 -d ':')"
 	a_name="$(echo "${alt}" | cut -f 2 -s -d ':')"
 	target="$(echo "${alt}" | cut -f 3 -s -d ':')"
@@ -62,9 +80,11 @@ _is_installable() {
 		_is_absolute_path "${a_path}" || \
 			a_path="$(echo "${bb_applets}" | grep -swe "${a_path_basename}\$")"
 	elif ! echo "${target}" | grep -qsxE "${bb_targets}"; then
-		printf "Error: alternative %s, target %s is not a busybox applet.\n" \
-		"${a_path}" "${target}" >&2
-		return 1
+		printf "%s: alternative %s, target %s is not a busybox applet.\n" \
+			"$(test -n "${USE_ALTS_FOREIGN:-}" && echo "Warning" || echo "Error")" \
+			"${a_path}" "${target}" >&2
+		[ -n "${USE_ALTS_FOREIGN:-}" ] || \
+			return 1
 	fi
 	if [ -e "${a_path}" ] && \
 	! readlink "${a_path}" | grep -qse '^/etc/alternatives/'; then
@@ -73,34 +93,47 @@ _is_installable() {
 		echo "unknown")" >&2
 		return 1
 	fi
-	:
+
+	if [ -z "${a_manpage}" ]; then
+		t_manpage="${manpage}"
+	elif [ "${a_manpage}" = "?" ]; then
+		t_manpage="$(_search_applet_manpage "${a_path_basename}" "$(basename "${target}")")"
+		[ -n "${t_manpage}" ] || \
+			printf "Warning: have not found a man page for alternative %s.\n" \
+			"${a_name}" >&2
+	else
+		t_manpage="$(_search_applet_manpage "${a_manpage}")"
+	fi
 }
 
 _install_slaves() {
 	local alt a_path a_path_basename a_name target
 	for alt in "${@}"; do
 		_is_installable || continue
-		echo "--slave ${a_path} ${a_name} ${target} \
---slave ${mandir}/man1/${a_name}.1.gz ${a_name}.1.gz ${mandir}/man1/busybox.1.gz"
+		echo "--slave ${a_path} ${a_name} ${target}"
+		[ -z "${t_manpage}" ] || \
+			echo "--slave ${mandir}${a_name}.1.gz ${a_name}.1.gz ${t_manpage}"
 	done
-	:
 }
 
 # parse configuration variables and install alternatives
 _alts() {
 	local link_group alt res
-	local a_path a_path_basename a_priority a_name target
+	local a_path a_path_basename a_priority a_name a_manpage target t_manpage
 	local reconfigure="$(test ! -e /var/tmp/bb-alts-reconfigure.txt || echo "1")"
 	local bb_applets="$(busybox --list-full | sed -nre '3,$ {\|^| s||/|;p}')"
 	local bb_applet_names="$(busybox --list | sed -re '1,2d;$!{:a;N;s/\n/\t/;ta}')"
 	local bb_targets="$(_bb_targets)"
-	local mandir="/usr/share/man"
+	local manpage="$(man --where "busybox")"
+	local mandir="$(dirname "${manpage}")/"
 
 	echo "Installing some busybox alternatives." >&2
 
 	for link_group in ${BB_ALTS} \
-	${USE_ALTS_EXTRA:+${BB_ALTS_EXTRA:-}}; do
+	${USE_ALTS_EXTRA:+${BB_ALTS_EXTRA:-}} \
+	${USE_ALTS_FOREIGN:+${BB_ALTS_FOREIGN:-}}; do
 		alt="$(echo "${link_group}" | cut -f 1 -d ',')"
+		a_manpage="$(echo "${alt}" | cut -f 5 -s -d ':')"
 		_is_installable || continue
 		a_priority="$(echo "${alt}" | cut -f 4 -s -d ':')"
 		echo "Installing alternative ${a_name} in ${a_path} for ${target}" >&2
@@ -108,7 +141,9 @@ _alts() {
 			sed -i -re "\|^${a_name}[[:blank:]]+| d" /var/tmp/bb-alts-reconfigure.txt
 		if res="$(update-alternatives --install "${a_path}" "${a_name}" \
 		"${target}" "${a_priority:-${PRIORITY}}" \
-		$(echo "--slave ${mandir}/man1/${a_path_basename}.1.gz ${a_path_basename}.1.gz ${mandir}/man1/busybox.1.gz"
+		$( [ -z "${t_manpage}" ] || \
+		echo "--slave ${mandir}${a_path_basename}.1.gz \
+${a_path_basename}.1.gz ${t_manpage}"
 		_install_slaves $(echo "${link_group}" | \
 		cut -f 2- -s -d ',' | tr -s ',' ' ')) \
 		 2>&1)"; then
@@ -124,7 +159,6 @@ _alts() {
 				printf 'Error: %s\n' "${res}" >&2
 			_check "${a_name}"
 		done < /var/tmp/bb-alts-reconfigure.txt
-	:
 }
 
 bb="$(which "busybox")" || exit 1
