@@ -1,4 +1,4 @@
-bb-alts (0.9) UNRELEASED; urgency=medium
+bb-alts (0.9) unstable; urgency=medium
 
   * allowing to install any alternative,
     even when the target is not a Busybox applet.

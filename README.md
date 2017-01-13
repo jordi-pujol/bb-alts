@@ -5,6 +5,8 @@ Description
 
 *bb-alts* is a package that installs alternatives for busybox 
 internal applets, allowing easy use of this applets in the system.
+When enabled, *bb-alts* also installs alternatives for commands
+that are not Busybox applets
 
 Detects existing Debian alternatives from other packages and installs 
 the corresponding busybox applet as another alternative, also installs
