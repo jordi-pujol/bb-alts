@@ -9,6 +9,7 @@ Homepage: http://livenet.selfip.com
 Package: bb-alts
 Architecture: all
 Depends: ${misc:Depends}, busybox,
+Recommends: man-db,
 Provides: awk, mt, telnet-client,
  traceroute, traceroute6, editor, vi, lzma,
 Description: Installs Debian alternatives for busybox internal applets,
