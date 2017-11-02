@@ -25,7 +25,7 @@ _comma_separated() {
 		N
 		$!ba
 		s/([^[:space:]])[[:space:]]+([^[:space:]])/\1'"${1:-","}"'\2/g
-		s/[[:space:]]+//g'
+		s/^[[:space:]]+|[[:space:]]+$//g'
 }
 
 _bb_targets() {
