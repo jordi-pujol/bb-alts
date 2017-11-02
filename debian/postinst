@@ -32,7 +32,7 @@ _comma_separated() {
 		N
 		$!ba
 		s/([^[:space:]])[[:space:]]+([^[:space:]])/\1'"${1:-","}"'\2/g
-		s/[[:space:]]+//g'
+		s/^[[:space:]]+|[[:space:]]+$//g'
 }
 
 _bb_targets() {
@@ -51,25 +51,27 @@ _check() {
 # searching for a matching man page
 _search_applet_manpage() {
 	local t
+	[ -n "${man_cmd}" ] || \
+		return 1
 	for t in "${@}"; do
-		! man --where "${t}" || break
+		! "${man_cmd}" --where "${t}" || \
+			return 0
 	done 2> /dev/null
-	:
+	return 1
 }
 
 _is_installable() {
-	local t m
 	a_path="$(echo "${alt}" | cut -f 1 -d ':')"
 	a_name="$(echo "${alt}" | cut -f 2 -s -d ':')"
 	target="$(echo "${alt}" | cut -f 3 -s -d ':')"
 	a_path_basename="$(basename "${a_path}")"
 	[ -n "${a_name}" ] || a_name="$(basename "${a_path}")"
 	[ -n "${target}" ] || target="${bb}"
-	t="$(which "${target}")" && \
-	[ -x "${t}" ] || \
-		( printf 'Error: alternative %s, target %s does not exist.\n' \
+	if [ ! -x "$(which "${target}")" ]; then
+		printf 'Error: alternative %s, target %s does not exist.\n' \
 		"${a_path}" "${target}" >&2
-		return 1 )
+		return 1
+	fi
 	target="$(which "${target}")"
 	if [ "${target}" = "${bb}" ]; then
 		if ! echo "${bb_applet_names}" | grep -qswe "${a_path_basename}"; then
@@ -83,6 +85,11 @@ _is_installable() {
 		printf "%s: alternative %s, target %s is not a busybox applet.\n" \
 			"$(test -n "${USE_ALTS_FOREIGN:-}" && echo "Warning" || echo "Error")" \
 			"${a_path}" "${target}" >&2
+		if ! _is_absolute_path "${a_path}"; then
+			printf 'Error: invalid alternative, %s must specify directory.\n' \
+			"${a_path}" >&2
+			return 1
+		fi
 		[ -n "${USE_ALTS_FOREIGN:-}" ] || \
 			return 1
 	fi
@@ -94,15 +101,21 @@ _is_installable() {
 		return 1
 	fi
 
+	[ -n "${man_cmd}" ] || \
+		return 0
+
 	if [ -z "${a_manpage}" ]; then
 		t_manpage="${manpage}"
+	elif [ "${a_manpage}" = "-" ]; then
+		t_manpage=""
 	elif [ "${a_manpage}" = "?" ]; then
-		t_manpage="$(_search_applet_manpage "${a_path_basename}" "$(basename "${target}")")"
-		[ -n "${t_manpage}" ] || \
+		t_manpage="$(_search_applet_manpage "${a_path_basename}" "$(basename "${target}")")" || \
 			printf "Warning: have not found a man page for alternative %s.\n" \
 			"${a_name}" >&2
 	else
-		t_manpage="$(_search_applet_manpage "${a_manpage}")"
+		t_manpage="$(_search_applet_manpage "${a_manpage}")" || \
+			printf "Warning: have not found man page %s for alternative %s.\n" \
+			"${a_manpage}" "${a_name}" >&2
 	fi
 }
 
@@ -121,13 +134,17 @@ _alts() {
 	local link_group alt res
 	local a_path a_path_basename a_priority a_name a_manpage target t_manpage
 	local reconfigure="$(test ! -e /var/tmp/bb-alts-reconfigure.txt || echo "1")"
-	local bb_applets="$(busybox --list-full | sed -nre '3,$ {\|^| s||/|;p}')"
-	local bb_applet_names="$(busybox --list | sed -re '1,2d;$!{:a;N;s/\n/\t/;ta}')"
+	local bb_applets="$(busybox --list-full | sed -nre '\|[^a-z]+$|d; {\|^| s||/|;p}')"
+	local bb_applet_names="$(busybox --list | sed -re '\|[^a-z]|d;$!{:a;N;s/\n/\t/;ta}')"
 	local bb_targets="$(_bb_targets)"
-	local manpage="$(man --where "busybox")"
-	local mandir="$(dirname "${manpage}")/"
+	local man_cmd manpage="" mandir=""
+	if man_cmd="$(which "man")" && \
+	manpage="$("${man_cmd}" --where "busybox" 2> /dev/null)"; then
+		mandir="$(dirname "${manpage}")/"
+	fi
 
-	echo "Installing some busybox alternatives." >&2
+	printf 'Installing %salternatives.\n' \
+		"$(test -n "${BB_ALTS_FOREIGN:-}" || echo "busybox ")" >&2
 
 	for link_group in ${BB_ALTS} \
 	${USE_ALTS_EXTRA:+${BB_ALTS_EXTRA:-}} \
@@ -136,7 +153,6 @@ _alts() {
 		a_manpage="$(echo "${alt}" | cut -f 5 -s -d ':')"
 		_is_installable || continue
 		a_priority="$(echo "${alt}" | cut -f 4 -s -d ':')"
-		echo "Installing alternative ${a_name} in ${a_path} for ${target}" >&2
 		[ -z "${reconfigure}" ] || \
 			sed -i -re "\|^${a_name}[[:blank:]]+| d" /var/tmp/bb-alts-reconfigure.txt
 		if res="$(update-alternatives --install "${a_path}" "${a_name}" \
@@ -146,9 +162,13 @@ _alts() {
 ${a_path_basename}.1.gz ${t_manpage}"
 		_install_slaves $(echo "${link_group}" | \
 		cut -f 2- -s -d ',' | tr -s ',' ' ')) \
-		 2>&1)"; then
+		2>&1)"; then
+			printf 'Installing alternative %s in %s for %s.\n' \
+				"${a_name}" "${a_path}" "${target}" >&2
+			[ -z "$(echo  "${res}" | tr -d '[:space:]')" ] || \
+				printf '%s\n' "${res}" >&2
 			_check "${a_name}"
-		 else
+		else
 			printf 'Error: %s\n' "${res}" >&2
 		fi
 	done
