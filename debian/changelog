@@ -1,3 +1,30 @@
+bb-alts (1.2) unstable; urgency=medium
+
+  * Recommends man-db
+
+ -- Jordi Pujol Palomer <jordipujolp@gmail.com>  Wed, 25 Oct 2017 13:42:41 +0200
+
+bb-alts (1.1) unstable; urgency=medium
+
+  * select only applets with alphanumeric name from the busybox list.
+  * add applets to BB_ALTS_EXTRA:
+    ed, ifup, ifdown, telnetd
+
+ -- Jordi Pujol Palomer <jordipujolp@gmail.com>  Sat, 25 Mar 2017 15:49:44 +0100
+
+bb-alts (1.0) unstable; urgency=medium
+
+  * man page value:
+    null use busybox's man page
+    "-" don't search for a match
+    anyname look for a man page with this name
+    "?" search for a matching according to command name and alternative
+      name.
+  * Echo warning messages for man pages not found.
+  * Solved a Bug when target executables don't exist.
+
+ -- Jordi Pujol Palomer <jordipujolp@gmail.com>  Fri, 13 Jan 2017 14:50:23 +0100
+
 bb-alts (0.9) unstable; urgency=medium
 
   * allowing to install any alternative,
