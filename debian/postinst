@@ -80,7 +80,8 @@ _is_installable() {
 			return 1
 		fi
 		_is_absolute_path "${a_path}" || \
-			a_path="$(echo "${bb_applets}" | grep -swe "${a_path_basename}\$")"
+			a_path="$(echo "${bb_applets}" | grep -swe "${a_path_basename}\$")" || \
+			return 1
 	elif ! echo "${target}" | grep -qsxE "${bb_targets}"; then
 		printf "%s: alternative %s, target %s is not a busybox applet.\n" \
 			"$(test -n "${USE_ALTS_FOREIGN:-}" && echo "Warning" || echo "Error")" \
@@ -134,8 +135,11 @@ _alts() {
 	local link_group alt res
 	local a_path a_path_basename a_priority a_name a_manpage target t_manpage
 	local reconfigure="$(test ! -e /var/tmp/bb-alts-reconfigure.txt || echo "1")"
-	local bb_applets="$(busybox --list-full | sed -nre '\|[^a-z]+$|d; {\|^| s||/|;p}')"
-	local bb_applet_names="$(busybox --list | sed -re '\|[^a-z]|d;$!{:a;N;s/\n/\t/;ta}')"
+	local bb_applets="$(busybox --list-full | \
+		sed -nre '\|[^a-z]+$|d; {\|^| s||/|;p}' | \
+		sort -u)"
+	local bb_applet_names="$(busybox --list | \
+		sed -re '\|[^a-z]|d;$!{:a;N;s/\n/\t/;ta}')"
 	local bb_targets="$(_bb_targets)"
 	local man_cmd manpage="" mandir=""
 	if man_cmd="$(which "man")" && \
