@@ -136,7 +136,7 @@ _alts() {
 	local a_path a_path_basename a_priority a_name a_manpage target t_manpage
 	local reconfigure="$(test ! -e /var/tmp/bb-alts-reconfigure.txt || echo "1")"
 	local bb_applets="$(busybox --list-full | \
-		sed -nre '\|[^a-z]+$|d; {\|^| s||/|;p}' | \
+		sed -nre '\|/[^a-z].*$|d; {\|^| s||/|;p}' | \
 		sort -u)"
 	local bb_applet_names="$(busybox --list | \
 		sed -re '\|[^a-z]|d;$!{:a;N;s/\n/\t/;ta}')"
