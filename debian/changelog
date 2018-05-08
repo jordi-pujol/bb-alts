@@ -1,4 +1,4 @@
-bb-alts (1.3) UNRELEASED; urgency=medium
+bb-alts (1.3) unstable; urgency=medium
 
   * bug correction: select valid commands from busybox --list-full
 
