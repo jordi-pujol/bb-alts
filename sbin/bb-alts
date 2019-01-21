@@ -3,7 +3,7 @@
 # bb-alts:
 # installs Debian alternatives for busybox internal applets
 
-# Copyright: (C) 2009-2017 Jordi Pujol <jordipujolp@gmail.com>
+# Copyright: (C) 2009-2019 Jordi Pujol <jordipujolp@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,29 +19,30 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 _bb_targets() {
-	printf '%s' "${bb} $(dpkg -L bb-alts | grep -se '^/usr/bin/.*-busybox')" | \
-		tr -s '[:space:]' '|'
+	echo "${bb}"
+	dpkg -L bb-alts | grep -sxe '^/usr/bin/.*-busybox'
+	echo "${USE_ALTS_FOREIGN:+"${BB_ALTS_FOREIGN:-}"}"  | \
+		tr -s '[:space:]' '\n' | \
+		cut -f 1 -d ','| cut -f 3 -s -d ':'
 }
 
 _deconfigure() {
 	echo "Deconfiguring busybox alternatives." >&2
-	/var/lib/dpkg/info/bb-alts.prerm deconfigure
-	:
+	/var/lib/dpkg/info/bb-alts.prerm deconfigure || :
 }
 
 _reconfigure() {
 	echo "Reconfiguring busybox alternatives." >&2
-	dpkg-reconfigure bb-alts
-	:
+	dpkg-reconfigure bb-alts || :
 }
 
 _list() {
-	local a_name target bb_targets alts
+	local a_name target alts \
+		bb_targets="$(_bb_targets)"
 	echo "Listing busybox alternatives." >&2
-	bb_targets="$(_bb_targets)"
 	for a_name in $(update-alternatives --get-selections | awk '{print $1}'); do
 		for target in $(update-alternatives --list "${a_name}" 2> /dev/null | \
-		grep -sxE "${bb_targets}"); do
+		grep -sxF "${bb_targets}"); do
 			update-alternatives --query "${a_name}" 2>&1 | \
 			awk -v target="${target}" 'NR <= 2 {print}
 $1 == "Value:" {print}
@@ -57,8 +58,7 @@ END{print ""}'
 _list_active() {
 	echo "Listing actually selected busybox alternatives." >&2
 	update-alternatives --get-selections | \
-	awk -v bb_targets="$(_bb_targets)" '$3 ~ bb_targets'
-	:
+		grep -swF "$(_bb_targets)" || :
 }
 
 _help() {
@@ -71,18 +71,18 @@ Options:
 -l --list : lists all installed busybox alternatives.
 	This is the default option.
 -a --list-active : lists busybox alternatives that are actually selected.
--h --help : shows this text.
-" >&2
-	:
+-h --help : shows this text."
 }
 
+set -o errexit -o nounset -o noglob
+
 bb="$(which "busybox")" || exit 1
+. /etc/bb-alts.conf
 
 test -n "${1:-}" || set -- "--list"
 
-while [ -n "${1:-}" ]; do
-	# execute an option
-	case "${1}" in
+for option in "${@}"; do
+	case "${option}" in
 	-d|--deconfigure)
 		_deconfigure;;
 	-r|--reconfigure)
@@ -99,6 +99,4 @@ while [ -n "${1:-}" ]; do
 		exit 1
 		;;
 	esac
-	shift
 done
-:
